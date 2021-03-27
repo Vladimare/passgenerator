@@ -36,7 +36,11 @@ func printUsage() {
 `)
 }
 
-func PassGen(enNums, enLCLs, enUCLs, enSyms bool, length int) string {
+func PassGen(enNums, enLCLs, enUCLs, enSyms bool, length int) (string, error) {
+    if length < 8 {
+        return "", fmt.Errorf("Length is less than 8")
+    }
+
     numbers := []byte("0123456789")
     lowerCaseLetters := []byte("abcdefghijklmnopqrstuvwxyz")
     upperCaseLetters := []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -108,7 +112,7 @@ func PassGen(enNums, enLCLs, enUCLs, enSyms bool, length int) string {
         case 's':
             symCount--
         default:
-            panic("No symbols enabled")
+            return "", fmt.Errorf("No symbols enabled")
         }
     }
     for (numCount+lowCount+uppCount+symCount) < length {
@@ -122,7 +126,7 @@ func PassGen(enNums, enLCLs, enUCLs, enSyms bool, length int) string {
         case 's':
             symCount++
         default:
-            panic("No symbols enabled")
+            return "", fmt.Errorf("No symbols enabled")
         }
     }
 
@@ -143,7 +147,7 @@ func PassGen(enNums, enLCLs, enUCLs, enSyms bool, length int) string {
         pass[i], pass[j] = pass[j], pass[i]
     })
 
-    return string(pass)
+    return string(pass), nil
 }
 
 func main() {
@@ -218,7 +222,10 @@ func main() {
         }
     }
 
-    pass := PassGen(enNums, enLCLs, enUCLs, enSyms, length)
+    pass, err := PassGen(enNums, enLCLs, enUCLs, enSyms, length)
+    if err != nil {
+        panic(err)
+    }
 
     fmt.Println(pass)
 }
