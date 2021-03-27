@@ -36,12 +36,117 @@ func printUsage() {
 `)
 }
 
-func main() {
+func PassGen(enNums, enLCLs, enUCLs, enSyms bool, length int) string {
     numbers := []byte("0123456789")
     lowerCaseLetters := []byte("abcdefghijklmnopqrstuvwxyz")
     upperCaseLetters := []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
     symbols := []byte("!#$%&*+-<=>?@^_{|}~")
 
+    // Create and seed the generator
+    r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+    var numCount int
+    var lowCount int
+    var uppCount int
+    var symCount int
+
+    if enNums {
+        numCount = r.Intn(len(numbers))+1
+    }
+    if enLCLs {
+        lowCount = r.Intn(len(lowerCaseLetters))+1
+    }
+    if enUCLs {
+        uppCount = r.Intn(len(upperCaseLetters))+1
+    }
+    if enSyms {
+        symCount = r.Intn(len(symbols))+1
+    }
+    totalCount := numCount + lowCount + uppCount + symCount
+
+    // normalize counts
+    var maxCount int
+    var letterType byte
+    // numCount
+    if numCount > 0 {
+        numCount = numCount * length / totalCount + 1
+        maxCount = numCount
+        letterType = 'n'
+    }
+    // lowCount
+    if lowCount > 0 {
+        lowCount = lowCount * length / totalCount + 1
+        if lowCount > maxCount {
+            maxCount = lowCount
+            letterType = 'l'
+        }
+    }
+    // uppCount
+    if uppCount > 0 {
+        uppCount = uppCount * length / totalCount + 1
+        if uppCount > maxCount {
+            maxCount = uppCount
+            letterType = 'u'
+        }
+    }
+    // symCount
+    if symCount > 0 {
+        symCount = symCount * length / totalCount + 1
+        if symCount > maxCount {
+            maxCount = symCount
+            letterType = 's'
+        }
+    }
+    for (numCount+lowCount+uppCount+symCount) > length {
+        switch letterType {
+        case 'n':
+            numCount--
+        case 'l':
+            lowCount--
+        case 'u':
+            uppCount--
+        case 's':
+            symCount--
+        default:
+            panic("No symbols enabled")
+        }
+    }
+    for (numCount+lowCount+uppCount+symCount) < length {
+        switch letterType {
+        case 'n':
+            numCount++
+        case 'l':
+            lowCount++
+        case 'u':
+            uppCount++
+        case 's':
+            symCount++
+        default:
+            panic("No symbols enabled")
+        }
+    }
+
+    var pass []byte
+    for i := 0; i < numCount; i++ {
+        pass = append(pass, numbers[r.Intn(len(numbers)-1)])
+    }
+    for i := 0; i < lowCount; i++ {
+        pass = append(pass, lowerCaseLetters[r.Intn(len(lowerCaseLetters)-1)])
+    }
+    for i := 0; i < uppCount; i++ {
+        pass = append(pass, upperCaseLetters[r.Intn(len(upperCaseLetters)-1)])
+    }
+    for i := 0; i < symCount; i++ {
+        pass = append(pass, symbols[r.Intn(len(symbols)-1)])
+    }
+    r.Shuffle(length, func (i, j int) {
+        pass[i], pass[j] = pass[j], pass[i]
+    })
+
+    return string(pass)
+}
+
+func main() {
     enOptions := false
 
     length := defLength
@@ -113,31 +218,7 @@ func main() {
         }
     }
 
-    var passString []byte
+    pass := PassGen(enNums, enLCLs, enUCLs, enSyms, length)
 
-    if enNums {
-        passString = append(passString, numbers...)
-    }
-    if enLCLs {
-        passString = append(passString, lowerCaseLetters...)
-    }
-    if enUCLs {
-        passString = append(passString, upperCaseLetters...)
-    }
-    if enSyms {
-        passString = append(passString, symbols...)
-    }
-
-
-    // Create and seed the generator
-    r := rand.New(rand.NewSource(time.Now().UnixNano()))
-
-    var pass []byte
-    //r.Shuffle(len(pass), func(i, j int) {
-    //    pass[i], pass[j] = pass[j], pass[i]
-    //})
-    for i := 0; i < length; i++ {
-        pass = append(pass, passString[r.Intn(len(passString)-1)])
-    }
-    fmt.Printf("%s\n", pass)
+    fmt.Println(pass)
 }
