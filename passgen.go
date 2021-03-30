@@ -70,19 +70,19 @@ func PassGen(enNums, enLCLs, enUCLs, enSyms bool, length int) (string, error) {
 
     // normalize counts
     var maxCount int
-    var letterType byte
+    var pCount *int
     // numCount
     if numCount > 0 {
         numCount = numCount * length / totalCount + 1
         maxCount = numCount
-        letterType = 'n'
+        pCount = &numCount
     }
     // lowCount
     if lowCount > 0 {
         lowCount = lowCount * length / totalCount + 1
         if lowCount > maxCount {
             maxCount = lowCount
-            letterType = 'l'
+            pCount = &lowCount
         }
     }
     // uppCount
@@ -90,7 +90,7 @@ func PassGen(enNums, enLCLs, enUCLs, enSyms bool, length int) (string, error) {
         uppCount = uppCount * length / totalCount + 1
         if uppCount > maxCount {
             maxCount = uppCount
-            letterType = 'u'
+            pCount = &uppCount
         }
     }
     // symCount
@@ -98,36 +98,18 @@ func PassGen(enNums, enLCLs, enUCLs, enSyms bool, length int) (string, error) {
         symCount = symCount * length / totalCount + 1
         if symCount > maxCount {
             maxCount = symCount
-            letterType = 's'
+            pCount = &symCount
         }
     }
+    if pCount == nil {
+        return "", fmt.Errorf("No symbols enabled")
+    }
+
     for (numCount+lowCount+uppCount+symCount) > length {
-        switch letterType {
-        case 'n':
-            numCount--
-        case 'l':
-            lowCount--
-        case 'u':
-            uppCount--
-        case 's':
-            symCount--
-        default:
-            return "", fmt.Errorf("No symbols enabled")
-        }
+        *pCount--
     }
     for (numCount+lowCount+uppCount+symCount) < length {
-        switch letterType {
-        case 'n':
-            numCount++
-        case 'l':
-            lowCount++
-        case 'u':
-            uppCount++
-        case 's':
-            symCount++
-        default:
-            return "", fmt.Errorf("No symbols enabled")
-        }
+        *pCount++
     }
 
     var pass []byte
