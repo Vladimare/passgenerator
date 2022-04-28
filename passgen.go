@@ -97,7 +97,6 @@ func PassGen(enNums, enLCLs, enUCLs, enSyms bool, length int) (string, error) {
     if symCount > 0 {
         symCount = symCount * length / totalCount + 1
         if symCount > maxCount {
-            maxCount = symCount
             pCount = &symCount
         }
     }
